@@ -2,7 +2,7 @@
 title: "Activity Analyser"
 author: "Somesh Verma"
 date: "September 10, 2016"
-output: html_document
+output: md_document
 ---
 
 ```{r setup, include=FALSE}

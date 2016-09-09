@@ -138,16 +138,8 @@ $(document).ready(function () {
 <div id="data-load" class="section level3">
 <h3>Data Load</h3>
 <p>Load the data using read.csv/tbl_df and for understanding of data, lets print the o/p of summary</p>
-<pre class="r"><code>library(dplyr)</code></pre>
-<pre><code>## 
-## Attaching package: 'dplyr'</code></pre>
-<pre><code>## The following objects are masked from 'package:stats':
-## 
-##     filter, lag</code></pre>
-<pre><code>## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>library(lattice)
+<pre class="r"><code>library(dplyr)
+library(lattice)
 
 activityData &lt;- tbl_df(read.csv(file = &quot;activity.csv&quot;, na.strings = &quot;NA&quot;))
 summary(activityData)</code></pre>
