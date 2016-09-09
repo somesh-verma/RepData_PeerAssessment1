@@ -1,25 +1,104 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Activity Analyser"
+author: "Somesh Verma"
+date: "September 10, 2016"
+output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
-## Loading and preprocessing the data
+##Introduction
+
+It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the "quantified self" movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
+
+This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
+
+The data for this assignment can be downloaded from the course web site:
+
+Dataset: [Activity monitoring data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip)
+
+The variables included in this dataset are:
+
+- steps: Number of steps taking in a 5-minute interval (missing values are coded as NA)
+- date: The date on which the measurement was taken in YYYY-MM-DD format
+- interval: Identifier for the 5-minute interval in which measurement was taken
+
+###Data Load
+
+Load the data using read.csv/tbl_df and for understanding of data, lets print the o/p of summary
+```{r dataLoad}
+library(dplyr)
+library(lattice)
+
+activityData <- tbl_df(read.csv(file = "activity.csv", na.strings = "NA"))
+summary(activityData)
+```
+
+###What is mean total number of steps taken per day?
+
+```{r numberOfSteps}
+activityDataDate <- activityData %>%
+    group_by(date) %>%
+      mutate(totalSteps=sum(steps, na.rm=T))
+hist(activityDataDate$totalSteps, col="blue", 
+    main="Number of Steps Taken Per Day", xlab="Number of Steps", 
+    ylab="Count/Frequency", breaks=10)
+```
+
+####Mean and Median of the Daily Step Count
+```{r meanAndMedian}
+sprintf("Mean of Total Steps: %f Median of Total Steps: %f", mean(activityDataDate$totalSteps), median(activityDataDate$totalSteps))
+```
+
+###What is the average daily activity pattern?
+```{r activityPattern}
+activityPattern <- activityData %>%
+    group_by(interval) %>%
+      mutate(meanSteps=mean(steps, na.rm=T))
+plot(activityPattern$interval, activityPattern$meanSteps, type="l", col="blue", xlab = "Interval", ylab = "Mean Step Count")
+
+maximumInterval<- which.max(activityPattern$meanSteps)
+activityPattern[maximumInterval, ]
+```
+
+###Imputing missing values
+
+####1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+```{r imputingNA}
+sprintf("Number of Rows with NA: %d", sum(is.na(activityData)))
+```
+
+####2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+####3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+```{r imputing}
+activityDataImput <- activityData %>%
+    group_by(interval) %>%
+    mutate(steps=ifelse(is.na(steps), mean(steps, na.rm=T), steps))
+```
+
+####4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+```{r numberOfSteps2}
+activityDataDate <- activityData %>%
+    group_by(date) %>%
+      mutate(totalSteps=sum(steps, na.rm=T))
+hist(activityDataDate$totalSteps, col="blue", 
+    main="Number of Steps Taken Per Day", xlab="Number of Steps", 
+    ylab="Count/Frequency", breaks=10)
+```
+
+###Are there differences in activity patterns between weekdays and weekends?
+```{r ActivityPatternWeekDaysWeekEnds}
+activityDataWeekdays <- activityData %>%
+    mutate(weekdays=ifelse((weekdays(as.Date(as.character(date)),T) == "Sun") | (weekdays(as.Date(as.character(date)), T) == "Sat"),"Weekends","Weekdays"))
+
+activityDataWeekdaysSummary <- activityDataWeekdays %>%
+  group_by(weekdays, interval)  %>% 
+  summarize(totalSteps=sum(steps, na.rm=TRUE), averageSteps=mean(steps, na.rm=TRUE))
 
 
-
-## What is mean total number of steps taken per day?
-
-
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+xyplot(averageSteps~interval|weekdays, data=activityDataWeekdaysSummary, type='l', layout=(c(1,2)),
+   main="Average Daily Activity Pattern by Weekday/Weekend", col="blue", 
+   ylab="Average No. of Steps Taken per 5 min Interval", xlab="5 min Time Interval") 
+```
